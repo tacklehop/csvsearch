@@ -16,6 +16,10 @@ func TestInputFiles(t *testing.T) {
 		{"sample.csv", false},
 		{"not-exist.csv", true},
 		{"error.csv", true},
+		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/sample.csv", false},
+		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/non-exist.csv", true},
+		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/error.csv", true},
+		{"https://not-exist.com", true},
 	}
 
 	for _, c := range cases {
