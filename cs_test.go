@@ -10,65 +10,73 @@ import (
 
 func TestInputFiles(t *testing.T) {
 	cases := []struct {
+		name	string
 		in      string
 		wantErr bool
 	}{
-		{"sample.csv", false},
-		{"not-exist.csv", true},
-		{"error.csv", true},
-		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/sample.csv", false},
-		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/non-exist.csv", true},
-		{"https://raw.githubusercontent.com/tacklehop/csvsearch/main/error.csv", true},
-		{"https://not-exist.com", true},
+		{"file: normal", "sample.csv", false},
+		{"file: not exist", "not-exist.csv", true},
+		{"file: non csv format", "error.csv", true},
+		{"http: normal", "https://raw.githubusercontent.com/tacklehop/csvsearch/main/sample.csv", false},
+		{"http: uri not exist", "https://raw.githubusercontent.com/tacklehop/csvsearch/main/non-exist.csv", true},
+		{"http: non csv format", "https://raw.githubusercontent.com/tacklehop/csvsearch/main/error.csv", true},
+		{"http: domain not exist", "https://not-exist.com", true},
 	}
 
 	for _, c := range cases {
-		err := searchCsv(c.in, "")
-		if c.wantErr {
-			if err == nil {
-				t.Errorf("cs %v results in %v", c.in, err)
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			err := searchCsv(c.in, "")
+			if c.wantErr {
+				if err == nil {
+					t.Errorf("cs %v results in %v", c.in, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("cs %v results in %v", c.in, err)
+				}
 			}
-		} else {
-			if err != nil {
-				t.Errorf("cs %v results in %v", c.in, err)
-			}
-		}
+		})
 	}
 }
 
 func TestSearchWords(t *testing.T) {
 	testfile := "sample.csv"
 	cases := []struct {
+		name string
 		in   string
 		want string
 	}{
-		{"Key1", "[Key1 Word1  ]"},
-		{"Word3", "[Key2 Word1 Word2 Word3][Key3 Word3 Word1]"},
+		{"case 1", "Key1", "[Key1 Word1  ]"},
+		{"case 2", "Word3", "[Key2 Word1 Word2 Word3][Key3 Word3 Word1]"},
 	}
 
 	for _, c := range cases {
-		r, w, err := os.Pipe()
-		if err != nil {
-			t.Fatal(err)
-		}
-		stdout := os.Stdout
-		os.Stdout = w
-		err = searchCsv(testfile, c.in)
-		os.Stdout = stdout
-		w.Close()
+		t.Run(c.name, func(t *testing.T) {
+			r, w, err := os.Pipe()
+			if err != nil {
+				t.Fatal(err)
+			}
+			stdout := os.Stdout
+			os.Stdout = w
+			err = searchCsv(testfile, c.in)
+			os.Stdout = stdout
+			w.Close()
 
-		if err != nil {
-			t.Fatalf("%v does not exist\n", testfile)
-		}
+			if err != nil {
+				t.Fatalf("%v does not exist\n", testfile)
+			}
 
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		s := buf.String()
-		s = strings.Replace(s, "\ufeff", "", -1)
-		s = strings.Replace(s, "\n", "", -1)
-		if s != c.want {
-			t.Fatalf("Search result: %#v, want: %#v", s, c.want)
-		}
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			s := buf.String()
+			s = strings.Replace(s, "\ufeff", "", -1)
+			s = strings.Replace(s, "\n", "", -1)
+			if s != c.want {
+				t.Fatalf("Search result: %#v, want: %#v", s, c.want)
+			}
+		})
 	}
 
 }
