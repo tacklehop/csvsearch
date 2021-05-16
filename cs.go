@@ -45,9 +45,10 @@ func searchCsvFromHttp(uri, searchWord string) error {
 			return err
 		}
 		for _, w := range words {
-			if strings.Contains(w, "404: Not Found") {
+			// In case dir/file in URI does not exist
+			if w == "404: Not Found" {
 				fmt.Println(w)
-				return errors.New("404: Not Found error")
+				return errors.New(w)
 			} else if strings.Contains(w, searchWord) {
 				fmt.Println(words)
 				break

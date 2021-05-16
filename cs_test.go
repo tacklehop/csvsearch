@@ -26,7 +26,8 @@ func TestInputFiles(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
+			// disabled because test results are shown in parallel.
+			// t.Parallel()
 			err := searchCsv(c.in, "")
 			if c.wantErr {
 				if err == nil {
